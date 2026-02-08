@@ -1,28 +1,51 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 
 export default function Home() {
   const [username, setUsername] = useState("Pushkar3232");
   const [theme, setTheme] = useState<"dark" | "light">("dark");
-  const [mode, setMode] = useState<"full" | "compact">("full");
-  const [maxRepos, setMaxRepos] = useState(20);
+  const [mode, setMode] = useState<"mini" | "full">("mini");
+  const [maxRepos, setMaxRepos] = useState(5);
   const [previewKey, setPreviewKey] = useState(0);
   const [loading, setLoading] = useState(false);
   const [origin, setOrigin] = useState("");
+  const [cacheBreaker, setCacheBreaker] = useState(Date.now());
+
+  // Debounced username to avoid firing API on every keystroke
+  const [debouncedUsername, setDebouncedUsername] = useState(username);
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);
 
-  const queryString = `username=${encodeURIComponent(username)}&theme=${theme}&mode=${mode}&max=${maxRepos}`;
+  // Debounce username changes — wait 800ms after user stops typing
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedUsername(username);
+    }, 800);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [username]);
+
+  // Only update cache when debounced username or non-keystroke settings change
+  useEffect(() => {
+    setCacheBreaker(Date.now());
+  }, [debouncedUsername, theme, mode, maxRepos]);
+
+  const queryString = `username=${encodeURIComponent(debouncedUsername)}&theme=${theme}&mode=${mode}&max=${maxRepos}&t=${cacheBreaker}`;
   const apiUrl = origin ? `${origin}/api/timeline?${queryString}` : "";
-  const markdownSnippet = `![Project Timeline](https://YOUR_VERCEL_URL/api/timeline?${queryString})`;
+  const markdownSnippet = `![Project Timeline](https://YOUR_VERCEL_URL/api/timeline?username=${encodeURIComponent(debouncedUsername)}&theme=${theme}&mode=${mode}&max=${maxRepos})`;
 
   const handleGenerate = useCallback(() => {
     setLoading(true);
+    setDebouncedUsername(username); // Force immediate update
+    setCacheBreaker(Date.now());
     setPreviewKey((k) => k + 1);
-  }, []);
+  }, [username]);
 
   const copyToClipboard = useCallback((text: string) => {
     navigator.clipboard.writeText(text);
@@ -68,15 +91,15 @@ export default function Home() {
               </div>
               <div>
                 <label className="block text-sm text-[#8B949E] mb-1.5">Mode</label>
-                <select value={mode} onChange={(e) => setMode(e.target.value as "full" | "compact")} className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#58A6FF] transition-colors">
-                  <option value="full">Full</option>
-                  <option value="compact">Compact</option>
+                <select value={mode} onChange={(e) => setMode(e.target.value as "mini" | "full")} className="w-full bg-[#0D1117] border border-[#30363D] rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-[#58A6FF] transition-colors">
+                  <option value="mini">Mini (Profile Card)</option>
+                  <option value="full">Full (Gantt Chart)</option>
                 </select>
               </div>
             </div>
             <div>
               <label className="block text-sm text-[#8B949E] mb-1.5">Max Projects: <span className="text-white font-mono">{maxRepos}</span></label>
-              <input type="range" min="1" max="30" value={maxRepos} onChange={(e) => setMaxRepos(parseInt(e.target.value))} className="w-full accent-[#58A6FF]" />
+              <input type="range" min="1" max={mode === "mini" ? 10 : 30} value={maxRepos} onChange={(e) => setMaxRepos(parseInt(e.target.value))} className="w-full accent-[#58A6FF]" />
             </div>
             <button onClick={handleGenerate} disabled={!username.trim()} className="bg-[#238636] hover:bg-[#2EA043] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">
               Generate Timeline
@@ -161,14 +184,14 @@ export default function Home() {
                   <tr className="border-b border-[#21262D]">
                     <td className="py-3 pr-4"><code className="text-[#79C0FF] bg-[#0D1117] px-1.5 py-0.5 rounded">mode</code></td>
                     <td className="py-3 pr-4 text-[#8B949E]">string</td>
-                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">full</code></td>
-                    <td className="py-3"><code className="text-[#A5D6FF]">full</code> or <code className="text-[#A5D6FF]">compact</code></td>
+                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">mini</code></td>
+                    <td className="py-3"><code className="text-[#A5D6FF]">mini</code> (compact card) or <code className="text-[#A5D6FF]">full</code> (Gantt chart)</td>
                   </tr>
                   <tr>
                     <td className="py-3 pr-4"><code className="text-[#79C0FF] bg-[#0D1117] px-1.5 py-0.5 rounded">max</code></td>
                     <td className="py-3 pr-4 text-[#8B949E]">number</td>
-                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">20</code></td>
-                    <td className="py-3">Max repos to display (1–30)</td>
+                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">5</code></td>
+                    <td className="py-3">Max repos to display (1–30, recommended 5–10 for mini)</td>
                   </tr>
                 </tbody>
               </table>
@@ -186,9 +209,9 @@ export default function Home() {
               { icon: "🎨", title: "Language Colors", desc: "Bars auto-colored by primary tech stack using GitHub's linguist colors." },
               { icon: "🌙", title: "Theme Support", desc: "Dark and light themes that match GitHub's design system." },
               { icon: "⚡", title: "Edge Cached", desc: "24-hour CDN caching via Vercel Edge Runtime for instant loads." },
-              { icon: "🏆", title: "Smart Sorting", desc: "Top projects by stars, with longest-project highlight." },
+              { icon: "🏆", title: "Quality Ranking", desc: "Best repos ranked by docs, code quality, completeness & maintenance — not just stars." },
               { icon: "🟢", title: "Active Detection", desc: "Animated indicator for projects active within the last 60 days." },
-              { icon: "📐", title: "Compact Mode", desc: "Space-saving layout for README files with limited vertical space." },
+              { icon: "📐", title: "Mini Card", desc: "Tiny profile-ready card with bar chart, perfect for GitHub READMEs." },
             ].map((feature) => (
               <div key={feature.title} className="bg-[#161B22] border border-[#30363D] rounded-xl p-5">
                 <div className="text-2xl mb-2">{feature.icon}</div>

@@ -13,22 +13,27 @@ export async function GET(request: NextRequest) {
   // ── Parse query params ──
   const username = searchParams.get("username");
   const theme = (searchParams.get("theme") ?? "dark") as Theme;
-  const mode = (searchParams.get("mode") ?? "full") as Mode;
+  const mode = (searchParams.get("mode") ?? "mini") as Mode;
   const maxRepos = Math.min(
-    Math.max(parseInt(searchParams.get("max") ?? "20", 10) || 20, 1),
-    30
+    Math.max(parseInt(searchParams.get("max") ?? "5", 10) || 5, 1),
+    10
   );
+  
+  // Force cache busting in development
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const timestamp = Date.now();
+  const cacheKey = `${username}-${theme}-${mode}-${maxRepos}-${timestamp}`;
 
   // Validate theme and mode
   const validTheme: Theme = theme === "light" ? "light" : "dark";
-  const validMode: Mode = mode === "compact" ? "compact" : "full";
+  const validMode: Mode = mode === "full" ? "full" : "mini";
 
   // ── Validate username ──
   if (!username || username.trim().length === 0) {
     const svg = generateErrorSVG("Missing required parameter: username", validTheme);
     return new NextResponse(svg, {
       status: 400,
-      headers: svgHeaders(0),
+      headers: svgHeaders(0, `error-${Date.now()}`),
     });
   }
 
@@ -38,7 +43,7 @@ export async function GET(request: NextRequest) {
     const svg = generateErrorSVG("Invalid GitHub username", validTheme);
     return new NextResponse(svg, {
       status: 400,
-      headers: svgHeaders(0),
+      headers: svgHeaders(0, `error-${Date.now()}`),
     });
   }
 
@@ -52,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     return new NextResponse(svg, {
       status: 200,
-      headers: svgHeaders(86400), // Cache 24h
+      headers: svgHeaders(process.env.NODE_ENV === "development" ? 0 : 86400, cacheKey), // No cache in dev, 24h in prod
     });
   } catch (error) {
     const message =
@@ -61,15 +66,34 @@ export async function GET(request: NextRequest) {
 
     return new NextResponse(svg, {
       status: 500,
-      headers: svgHeaders(300), // Cache errors for 5 min
+      headers: svgHeaders(0, `error-${Date.now()}`), // Never cache errors
     });
   }
 }
 
-function svgHeaders(maxAge: number): HeadersInit {
+function svgHeaders(maxAge: number, cacheKey?: string): HeadersInit {
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const timestamp = Date.now();
+  
+  if (isDevelopment || maxAge === 0) {
+    return {
+      "Content-Type": "image/svg+xml",
+      "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0, private",
+      "Pragma": "no-cache",
+      "Expires": "Thu, 01 Jan 1970 00:00:00 GMT",
+      "Last-Modified": new Date().toUTCString(),
+      "ETag": `"${cacheKey || timestamp}"`,
+      "Vary": "*",
+      "X-Content-Type-Options": "nosniff",
+      "X-Frame-Options": "DENY",
+      "X-Cache-Status": "MISS",
+    };
+  }
+  
   return {
     "Content-Type": "image/svg+xml",
     "Cache-Control": `public, s-maxage=${maxAge}, max-age=${maxAge}, stale-while-revalidate=${maxAge * 2}`,
+    "ETag": `"${cacheKey || timestamp}"`,
     "X-Content-Type-Options": "nosniff",
   };
 }
