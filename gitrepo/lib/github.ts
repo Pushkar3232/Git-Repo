@@ -31,7 +31,7 @@ export async function fetchUserRepos(username: string): Promise<GitHubRepo[]> {
 
     const response = await fetch(url, {
       headers: getHeaders(),
-      next: { revalidate: 86400 },
+      cache: "no-store",
     });
 
     if (!response.ok) {
@@ -67,7 +67,7 @@ export async function fetchRepoLanguages(
 
   const response = await fetch(url, {
     headers: getHeaders(),
-    next: { revalidate: 86400 },
+    cache: "no-store",
   });
 
   if (!response.ok) {
@@ -94,7 +94,7 @@ export async function fetchRepoCommitDates(
 
   const response = await fetch(url, {
     headers: getHeaders(),
-    next: { revalidate: 86400 },
+    cache: "no-store",
   });
 
   if (!response.ok) {

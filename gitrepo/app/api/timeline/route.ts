@@ -4,7 +4,8 @@ import { processRepos } from "@/lib/process";
 import { generateTimelineSVG, generateErrorSVG } from "@/lib/svg-generator";
 import { Theme, Mode } from "@/lib/types";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -14,8 +15,8 @@ export async function GET(request: NextRequest) {
   const theme = (searchParams.get("theme") ?? "dark") as Theme;
   const mode = (searchParams.get("mode") ?? "full") as Mode;
   const maxRepos = Math.min(
-    Math.max(parseInt(searchParams.get("max") ?? "8", 10) || 8, 1),
-    15
+    Math.max(parseInt(searchParams.get("max") ?? "20", 10) || 20, 1),
+    30
   );
 
   // Validate theme and mode

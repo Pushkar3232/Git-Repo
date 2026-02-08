@@ -76,7 +76,7 @@ export default function Home() {
             </div>
             <div>
               <label className="block text-sm text-[#8B949E] mb-1.5">Max Projects: <span className="text-white font-mono">{maxRepos}</span></label>
-              <input type="range" min="1" max="15" value={maxRepos} onChange={(e) => setMaxRepos(parseInt(e.target.value))} className="w-full accent-[#58A6FF]" />
+              <input type="range" min="1" max="30" value={maxRepos} onChange={(e) => setMaxRepos(parseInt(e.target.value))} className="w-full accent-[#58A6FF]" />
             </div>
             <button onClick={handleGenerate} disabled={!username.trim()} className="bg-[#238636] hover:bg-[#2EA043] disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold px-6 py-2.5 rounded-lg transition-colors">
               Generate Timeline
@@ -167,8 +167,8 @@ export default function Home() {
                   <tr>
                     <td className="py-3 pr-4"><code className="text-[#79C0FF] bg-[#0D1117] px-1.5 py-0.5 rounded">max</code></td>
                     <td className="py-3 pr-4 text-[#8B949E]">number</td>
-                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">8</code></td>
-                    <td className="py-3">Max repos to display (1–15)</td>
+                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">20</code></td>
+                    <td className="py-3">Max repos to display (1–30)</td>
                   </tr>
                 </tbody>
               </table>

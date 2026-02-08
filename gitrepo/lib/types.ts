@@ -20,6 +20,12 @@ export interface GitHubLanguages {
 
 // ─── Processed Data Types ────────────────────────────────────────────────────
 
+/** A continuous period of activity within a repo */
+export interface ActivitySegment {
+  start: Date;
+  end: Date;
+}
+
 export interface ProcessedRepo {
   name: string;
   startDate: Date;
@@ -30,6 +36,8 @@ export interface ProcessedRepo {
   stars: number;
   description: string | null;
   url: string;
+  /** Active segments (gaps > 90 days create separate segments) */
+  segments: ActivitySegment[];
 }
 
 // ─── SVG Configuration ──────────────────────────────────────────────────────
@@ -49,6 +57,7 @@ export interface ThemeColors {
   cardBackground: string;
   text: string;
   textSecondary: string;
+  textMuted: string;
   border: string;
   gridLine: string;
   yearText: string;
@@ -58,4 +67,6 @@ export interface ThemeColors {
   ongoingBadge: string;
   ongoingBadgeText: string;
   starColor: string;
+  rowHover: string;
+  accentGlow: string;
 }
