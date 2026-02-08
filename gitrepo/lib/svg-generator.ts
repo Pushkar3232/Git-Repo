@@ -180,7 +180,7 @@ function toX(
   return chartX + (m / totalMonths) * chartWidth;
 }
 
-// ─── Mini Card Generator (Default — compact for GitHub profiles) ─────────────
+// ─── Mini Card Generator (Full Width Professional Analytics) ─────────────────
 
 function generateMiniSVG(
   repos: ProcessedRepo[],
@@ -194,166 +194,292 @@ function generateMiniSVG(
   }
 
   const sorted = repos;
-  const maxActiveDays = Math.max(...sorted.map((r) => r.activeDays), 1);
+  const totalDays = sorted.reduce((s, r) => s + r.activeDays, 0);
 
-  // Accent: teal/cyan matching streak-stats aesthetic
-  const accent = theme === "dark" ? "#38D9A9" : "#0CA678";
-  const accentFaded = theme === "dark" ? "rgba(56,217,169,0.15)" : "rgba(12,166,120,0.10)";
-  const labelColor = colors.textSecondary;
-  const valueColor = theme === "dark" ? "#E6EDF3" : "#1F2328";
+  // Professional color palette
+  const accent = theme === "dark" ? "#60A5FA" : "#3B82F6"; // Blue
+  const accentSoft = theme === "dark" ? "rgba(96,165,250,0.08)" : "rgba(59,130,246,0.06)";
+  const valueColor = theme === "dark" ? "#F8FAFC" : "#0F172A";
+  const mutedColor = theme === "dark" ? "#64748B" : "#64748B";
+  
+  // Professional segment colors (muted, cohesive palette)
+  const segmentColors = [
+    theme === "dark" ? "#60A5FA" : "#3B82F6", // Blue
+    theme === "dark" ? "#34D399" : "#10B981", // Emerald  
+    theme === "dark" ? "#F472B6" : "#EC4899", // Pink
+    theme === "dark" ? "#FBBF24" : "#F59E0B", // Amber
+    theme === "dark" ? "#A78BFA" : "#8B5CF6", // Violet
+    theme === "dark" ? "#FB7185" : "#EF4444", // Red
+    theme === "dark" ? "#22D3EE" : "#06B6D4", // Cyan
+    theme === "dark" ? "#4ADE80" : "#22C55E", // Green
+  ];
 
-  // ── Layout ──
-  const cardW = 495;
-  const padX = 25;
+  // ── Full Width Layout Configuration ──
+  const maxProjects = Math.min(sorted.length, 8);
+  const cardW = 600; // Increased for full width
+  const padX = 20;
   const padY = 20;
-  const headerH = 42;
-  const rowH = 64;
-  const rowSep = 1;
-  const footerH = 32;
+  const headerH = 45;
+  const footerH = 35;
+  
+  // Optimized circle - larger and more prominent
+  const circleR = 90; // Even larger for better visibility
+  const strokeW = 20; // Thicker segments
+  const innerR = circleR - strokeW / 2;
+  
+  const chartAreaH = circleR * 2 + 50;
+  const cardH = padY + headerH + chartAreaH + footerH + padY;
 
-  const contentH = sorted.length * rowH + (sorted.length - 1) * rowSep;
-  const cardH = padY + headerH + contentH + footerH + padY;
+  // Circle positioned for optimal space usage
+  const circleCX = padX + circleR + 20;
+  const circleCY = padY + headerH + chartAreaH / 2;
+
+  // Project list - single column with proper spacing
+  const listStartX = circleCX + circleR + 40;
+  const listWidth = cardW - listStartX - padX;
 
   const svg: string[] = [];
   svg.push(
     `<svg xmlns="http://www.w3.org/2000/svg" width="${cardW}" height="${cardH}" viewBox="0 0 ${cardW} ${cardH}">`
   );
 
+  // ── Defs ──
   svg.push(`<defs>`);
   svg.push(`<style>`);
   svg.push(
-    `.f{font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}`
+    `.f{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif}`
   );
   svg.push(
-    `@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}`
+    `@keyframes slideIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}`
   );
-  svg.push(`.row{animation:fadeIn .5s ease forwards;opacity:0}`);
-  sorted.forEach((_, i) => {
-    svg.push(`.d${i}{animation-delay:${150 + i * 120}ms}`);
-  });
+  svg.push(`.item{animation:slideIn .5s ease-out forwards;opacity:0}`);
+  for (let i = 0; i < maxProjects; i++) {
+    svg.push(`.item-${i}{animation-delay:${250 + i * 80}ms}`);
+  }
+  svg.push(
+    `@keyframes scaleIn{from{opacity:0;transform:scale(0.85)}to{opacity:1;transform:scale(1)}}`
+  );
+  svg.push(
+    `.center{animation:scaleIn .6s ease-out forwards;animation-delay:.2s;opacity:0;transform-origin:${circleCX}px ${circleCY}px}`
+  );
   svg.push(`</style>`);
+
+  // Enhanced professional gradients
+  svg.push(
+    `<radialGradient id="centerGrad" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="${accentSoft}"/>
+      <stop offset="100%" stop-color="transparent"/>
+    </radialGradient>`
+  );
+  
+  // Segment gradients for depth
+  segmentColors.forEach((color, i) => {
+    svg.push(
+      `<linearGradient id="segGrad${i}" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="${color}"/>
+        <stop offset="100%" stop-color="${color}" stop-opacity="0.7"/>
+      </linearGradient>`
+    );
+  });
+  
+  // Enhanced shadow
+  svg.push(
+    `<filter id="cardShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="${theme === 'dark' ? '#000000' : '#000000'}" flood-opacity="${theme === 'dark' ? '0.4' : '0.12'}"/>
+    </filter>`
+  );
   svg.push(`</defs>`);
 
-  // ── Card background ──
+  // ── Card Background ──
   svg.push(
-    `<rect width="${cardW}" height="${cardH}" rx="6" fill="${colors.background}"/>`
+    `<rect width="${cardW}" height="${cardH}" rx="10" fill="${colors.background}" filter="url(#cardShadow)"/>`
   );
   svg.push(
-    `<rect x=".5" y=".5" width="${cardW - 1}" height="${cardH - 1}" rx="6" fill="none" stroke="${colors.border}" stroke-width="1"/>`
+    `<rect x="1" y="1" width="${cardW - 2}" height="${cardH - 2}" rx="9" fill="none" stroke="${colors.border}" stroke-width="0.5" opacity="0.5"/>`
   );
 
   // ── Header ──
-  const hY = padY + 16;
+  const hY = padY + 18;
   svg.push(
-    `<text x="${padX}" y="${hY}" class="f" font-size="13" fill="${valueColor}" font-weight="600">${escapeXml(username)}</text>`
+    `<text x="${padX}" y="${hY}" class="f" font-size="16" fill="${valueColor}" font-weight="600" letter-spacing="-0.02em">${escapeXml(
+      username
+    )}</text>`
   );
   svg.push(
-    `<text x="${cardW - padX}" y="${hY}" class="f" font-size="10" fill="${colors.textMuted}" text-anchor="end">Key Projects</text>`
+    `<text x="${padX}" y="${hY + 20}" class="f" font-size="11" fill="${mutedColor}" font-weight="500">Development Activity</text>`
   );
-
+  
   // Header divider
-  const headerDivY = padY + headerH - 6;
   svg.push(
-    `<line x1="${padX}" y1="${headerDivY}" x2="${cardW - padX}" y2="${headerDivY}" stroke="${colors.border}" stroke-width="1" opacity="0.4"/>`
+    `<line x1="${padX}" y1="${padY + headerH - 6}" x2="${
+      cardW - padX
+    }" y2="${padY + headerH - 6}" stroke="${
+      colors.border
+    }" stroke-width="0.5" opacity="0.25"/>`
   );
 
-  // ── Column layout ──
-  // | Name (left) | Bar (center) | Time (right-center) | Stack (right) |
-  const nameX = padX;
-  const barX = 170;
-  const barMaxW = 160;
-  const timeX = barX + barMaxW + 14;
-  const stackX = cardW - padX;
+  // ── Enhanced Circle with Clear Segment Separation ──
+  // Background track
+  svg.push(
+    `<circle cx="${circleCX}" cy="${circleCY}" r="${innerR}" fill="none" stroke="${colors.border}" stroke-width="${strokeW}" opacity="0.06"/>`
+  );
 
-  // ── Rows ──
-  const contentStartY = padY + headerH;
+  // Calculate segments with clear gaps
+  let currentAngle = -Math.PI / 2; // Start at top
+  const circumference = 2 * Math.PI * innerR;
+  const gapAngle = 0.02; // 2% gap between segments
+  const totalGaps = maxProjects * gapAngle;
+  const availableAngle = 2 * Math.PI - totalGaps;
 
-  sorted.forEach((repo, i) => {
-    const rowY = contentStartY + i * (rowH + rowSep);
-    const centerY = rowY + rowH / 2;
+  for (let i = 0; i < maxProjects; i++) {
+    const repo = sorted[i];
+    const ratio = repo.activeDays / totalDays;
+    
+    // Calculate segment angle with gap consideration
+    const segmentAngle = (ratio * availableAngle);
+    const arcLength = (segmentAngle / (2 * Math.PI)) * circumference;
+    const segmentColor = segmentColors[i % segmentColors.length];
 
-    svg.push(`<g class="row d${i}">`);
+    // Create arc path
+    const startAngle = currentAngle;
+    const endAngle = currentAngle + segmentAngle;
+    
+    const x1 = circleCX + innerR * Math.cos(startAngle);
+    const y1 = circleCY + innerR * Math.sin(startAngle);
+    const x2 = circleCX + innerR * Math.cos(endAngle);
+    const y2 = circleCY + innerR * Math.sin(endAngle);
 
-    // Alternating row background for depth
-    if (i % 2 === 1) {
-      svg.push(
-        `<rect x="1" y="${rowY}" width="${cardW - 2}" height="${rowH}" fill="${colors.cardBackground}" opacity="0.3"/>`
-      );
-    }
+    const largeArc = segmentAngle > Math.PI ? 1 : 0;
 
-    // ── Project name (prominent) ──
-    const nameStr = truncate(repo.name, 20);
+    // Main segment with clear boundaries
     svg.push(
-      `<text x="${nameX}" y="${centerY - 6}" class="f" font-size="13" fill="${valueColor}" font-weight="600">${escapeXml(nameStr)}</text>`
+      `<path d="M ${x1.toFixed(2)} ${y1.toFixed(2)} A ${innerR} ${innerR} 0 ${largeArc} 1 ${x2.toFixed(2)} ${y2.toFixed(2)}" ` +
+      `fill="none" stroke="${segmentColor}" stroke-width="${strokeW}" stroke-linecap="butt" ` +
+      `stroke-dasharray="${arcLength.toFixed(2)} ${circumference.toFixed(2)}" ` +
+      `stroke-dashoffset="${arcLength.toFixed(2)}" opacity="0.95">`
     );
-
-    // ── Tech stack (below name, small muted) ──
-    const langs = repo.secondaryLanguage
-      ? `${langAbbr(repo.primaryLanguage)} \u00B7 ${langAbbr(repo.secondaryLanguage)}`
-      : langAbbr(repo.primaryLanguage);
-
-    let metaLine = langs;
-    if (repo.complexityLabel === "High" || repo.complexityLabel === "Very High") {
-      metaLine += `  \u00B7  Complexity: ${repo.complexityLabel}`;
-    }
     svg.push(
-      `<text x="${nameX}" y="${centerY + 12}" class="f" font-size="10" fill="${colors.textMuted}">${escapeXml(metaLine)}</text>`
+      `<animate attributeName="stroke-dashoffset" ` +
+      `from="${arcLength.toFixed(2)}" to="0" ` +
+      `dur="0.8s" fill="freeze" begin="${(0.2 + i * 0.1).toFixed(2)}s" ` +
+      `calcMode="spline" keySplines="0.25 0 0.25 1"/>`
     );
+    svg.push(`</path>`);
 
-    // ── Activity bar ──
-    const barY = centerY - 3;
-    const barH = 6;
+    // Move to next segment with gap
+    currentAngle += segmentAngle + gapAngle;
+  }
 
-    // Track
-    svg.push(
-      `<rect x="${barX}" y="${barY}" width="${barMaxW}" height="${barH}" rx="3" fill="${accentFaded}"/>`
-    );
+  // ── Enhanced Center Hub ──
+  svg.push(`<g class="center">`);
+  const centerR = innerR - strokeW / 2 - 15;
+  
+  // Multi-layer center design
+  svg.push(
+    `<circle cx="${circleCX}" cy="${circleCY}" r="${centerR + 8}" fill="url(#centerGrad)" opacity="0.8"/>`
+  );
+  svg.push(
+    `<circle cx="${circleCX}" cy="${circleCY}" r="${centerR}" fill="${colors.background}" stroke="${colors.border}" stroke-width="0.5" opacity="0.2"/>`
+  );
+  
+  // Large, prominent total time
+  const totalStr = formatActiveDays(totalDays);
+  svg.push(
+    `<text x="${circleCX}" y="${
+      circleCY - 8
+    }" class="f" font-size="26" fill="${valueColor}" font-weight="700" text-anchor="middle" letter-spacing="-0.03em">${totalStr}</text>`
+  );
+  svg.push(
+    `<text x="${circleCX}" y="${
+      circleCY + 18
+    }" class="f" font-size="11" fill="${mutedColor}" text-anchor="middle" font-weight="500" letter-spacing="1px" opacity="0.9">TOTAL ACTIVE</text>`
+  );
+  svg.push(`</g>`);
 
-    // Fill — proportional
-    const ratio = repo.activeDays / maxActiveDays;
-    const barW = Math.max(6, Math.round(barMaxW * ratio));
-    svg.push(
-      `<rect x="${barX}" y="${barY}" width="${barW}" height="${barH}" rx="3" fill="${accent}"/>`
-    );
+  // ── Project List (Properly Spaced Single Column) ──
+  const itemH = 38; // Increased spacing even more
+  const listStartY = circleCY - (maxProjects * itemH) / 2 + itemH / 2;
 
-    // ── Active time (right of bar — prominent number) ──
+  for (let i = 0; i < maxProjects; i++) {
+    const repo = sorted[i];
+    const ly = listStartY + i * itemH;
+    
+    const segmentColor = segmentColors[i % segmentColors.length];
+    const nameStr = truncate(repo.name, 16);
     const activeStr = formatActiveDays(repo.activeDays);
+    const langStr = langAbbr(repo.primaryLanguage);  
+    const percent = ((repo.activeDays / totalDays) * 100).toFixed(0);
+
+    svg.push(`<g class="item item-${i}">`);
+
+    // Enhanced color indicator with clear separation
     svg.push(
-      `<text x="${timeX}" y="${centerY + 4}" class="f" font-size="12" fill="${accent}" font-weight="600">${activeStr}</text>`
+      `<rect x="${listStartX}" y="${ly - 7}" width="14" height="14" rx="3" fill="${segmentColor}" opacity="0.9"/>`
+    );
+    svg.push(
+      `<rect x="${listStartX + 3}" y="${ly - 4}" width="8" height="8" rx="2" fill="${colors.background}" opacity="0.8"/>`
+    );
+
+    // Project name - larger and more readable  
+    svg.push(
+      `<text x="${
+        listStartX + 22
+      }" y="${ly + 2}" class="f" font-size="14" fill="${valueColor}" font-weight="600">${escapeXml(
+        nameStr
+      )}</text>`
+    );
+
+    // Duration (right-aligned)
+    const durationX = cardW - padX;
+    svg.push(
+      `<text x="${durationX}" y="${
+        ly + 2
+      }" class="f" font-size="13" fill="${accent}" font-weight="600" text-anchor="end">${activeStr}</text>`
+    );
+
+    // Metadata line with better spacing
+    svg.push(
+      `<text x="${listStartX + 22}" y="${
+        ly + 18
+      }" class="f" font-size="11" fill="${mutedColor}" font-weight="500">${escapeXml(
+        langStr
+      )} • ${percent}%</text>`
     );
 
     svg.push(`</g>`);
+  }
 
-    // Row divider
-    if (i < sorted.length - 1) {
-      const divY = rowY + rowH;
-      svg.push(
-        `<line x1="${padX}" y1="${divY}" x2="${cardW - padX}" y2="${divY}" stroke="${colors.border}" stroke-width="0.5" opacity="0.2"/>`
-      );
-    }
-  });
-
-  // ── Footer ──
-  const footerY = contentStartY + contentH + footerH / 2 + 6;
-
-  // Footer divider
+  // ── Enhanced Footer ──
+  const footerDivY = padY + headerH + chartAreaH + 8;
   svg.push(
-    `<line x1="${padX}" y1="${contentStartY + contentH + 8}" x2="${cardW - padX}" y2="${contentStartY + contentH + 8}" stroke="${colors.border}" stroke-width="1" opacity="0.4"/>`
+    `<line x1="${padX}" y1="${footerDivY}" x2="${
+      cardW - padX
+    }" y2="${footerDivY}" stroke="${
+      colors.border
+    }" stroke-width="0.5" opacity="0.25"/>`
   );
 
-  // Total active time (sum across all projects)
-  const totalDays = sorted.reduce((s, r) => s + r.activeDays, 0);
-  const totalStr = formatActiveDays(totalDays);
+  const footerY = footerDivY + footerH / 2 + 2;
+  
+  // Footer content with better spacing
   svg.push(
-    `<text x="${padX}" y="${footerY + 4}" class="f" font-size="10" fill="${colors.textMuted}">Total Active</text>`
+    `<text x="${padX}" y="${footerY}" class="f" font-size="11" fill="${mutedColor}" font-weight="500">Total Development Time</text>`
   );
   svg.push(
-    `<text x="${padX + 76}" y="${footerY + 4}" class="f" font-size="11" fill="${accent}" font-weight="600">${totalStr}</text>`
+    `<text x="${
+      padX + 155
+    }" y="${footerY}" class="f" font-size="13" fill="${accent}" font-weight="600">${formatActiveDays(totalDays)}</text>`
   );
 
   // Project count
+  const projectsText =
+    sorted.length > maxProjects
+      ? `${sorted.length} projects (${maxProjects} shown)`
+      : `${sorted.length} project${sorted.length === 1 ? '' : 's'}`;
   svg.push(
-    `<text x="${cardW - padX}" y="${footerY + 4}" class="f" font-size="10" fill="${colors.textMuted}" text-anchor="end">${sorted.length} projects</text>`
+    `<text x="${
+      cardW - padX
+    }" y="${footerY}" class="f" font-size="10" fill="${mutedColor}" font-weight="500" text-anchor="end">${projectsText}</text>`
   );
 
   svg.push(`</svg>`);

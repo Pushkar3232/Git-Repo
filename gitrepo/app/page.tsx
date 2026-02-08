@@ -31,14 +31,12 @@ export default function Home() {
     };
   }, [username]);
 
-  // Only update cache when debounced username or non-keystroke settings change
-  useEffect(() => {
-    setCacheBreaker(Date.now());
-  }, [debouncedUsername, theme, mode, maxRepos]);
+  // Only update cache when Generate button is clicked
+  // Removed automatic updates to prevent unwanted API calls
 
   const queryString = `username=${encodeURIComponent(debouncedUsername)}&theme=${theme}&mode=${mode}&max=${maxRepos}&t=${cacheBreaker}`;
   const apiUrl = origin ? `${origin}/api/timeline?${queryString}` : "";
-  const markdownSnippet = `![Project Timeline](https://YOUR_VERCEL_URL/api/timeline?username=${encodeURIComponent(debouncedUsername)}&theme=${theme}&mode=${mode}&max=${maxRepos})`;
+  const markdownSnippet = `![Project Timeline](https://git-repo-five.vercel.app/api/timeline?username=${encodeURIComponent(debouncedUsername)}&theme=${theme}&mode=${mode}&max=${maxRepos})`;  
 
   const handleGenerate = useCallback(() => {
     setLoading(true);
@@ -65,8 +63,21 @@ export default function Home() {
             <h1 className="text-4xl font-bold tracking-tight">GitHub Readme Timeline</h1>
           </div>
           <p className="text-[#8B949E] text-lg max-w-xl mx-auto">
-            Generate a dynamic SVG Gantt-style project timeline for your GitHub profile README. Shows how your projects evolved over time, color-coded by tech stack.
+            Generate a beautiful SVG timeline for your GitHub profile README. Visualize your coding journey with color-coded project timelines.
           </p>
+          <div className="mt-6">
+            <a 
+              href="https://github.com/Pushkar3232/Git-Repo" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-[#238636] hover:bg-[#2EA043] text-white font-semibold px-6 py-3 rounded-lg transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+              </svg>
+              ⭐ Star & Contribute
+            </a>
+          </div>
         </div>
       </header>
 
@@ -149,99 +160,62 @@ export default function Home() {
           </div>
         </section>
 
-        {/* API Docs Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span className="text-[#58A6FF]">03.</span> API Reference
-          </h2>
-          <div className="bg-[#161B22] border border-[#30363D] rounded-xl overflow-hidden">
-            <div className="p-4 bg-[#0D1117] border-b border-[#30363D]">
-              <code className="text-[#58A6FF] text-sm font-mono">GET /api/timeline</code>
-            </div>
-            <div className="p-6">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-[#8B949E] border-b border-[#30363D]">
-                    <th className="pb-3 pr-4">Parameter</th>
-                    <th className="pb-3 pr-4">Type</th>
-                    <th className="pb-3 pr-4">Default</th>
-                    <th className="pb-3">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="text-[#E6EDF3]">
-                  <tr className="border-b border-[#21262D]">
-                    <td className="py-3 pr-4"><code className="text-[#FF7B72] bg-[#0D1117] px-1.5 py-0.5 rounded">username</code></td>
-                    <td className="py-3 pr-4 text-[#8B949E]">string</td>
-                    <td className="py-3 pr-4 text-[#8B949E]">—</td>
-                    <td className="py-3"><span className="text-[#FF7B72] text-xs mr-1">required</span> GitHub username</td>
-                  </tr>
-                  <tr className="border-b border-[#21262D]">
-                    <td className="py-3 pr-4"><code className="text-[#79C0FF] bg-[#0D1117] px-1.5 py-0.5 rounded">theme</code></td>
-                    <td className="py-3 pr-4 text-[#8B949E]">string</td>
-                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">dark</code></td>
-                    <td className="py-3"><code className="text-[#A5D6FF]">dark</code> or <code className="text-[#A5D6FF]">light</code></td>
-                  </tr>
-                  <tr className="border-b border-[#21262D]">
-                    <td className="py-3 pr-4"><code className="text-[#79C0FF] bg-[#0D1117] px-1.5 py-0.5 rounded">mode</code></td>
-                    <td className="py-3 pr-4 text-[#8B949E]">string</td>
-                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">mini</code></td>
-                    <td className="py-3"><code className="text-[#A5D6FF]">mini</code> (compact card) or <code className="text-[#A5D6FF]">full</code> (Gantt chart)</td>
-                  </tr>
-                  <tr>
-                    <td className="py-3 pr-4"><code className="text-[#79C0FF] bg-[#0D1117] px-1.5 py-0.5 rounded">max</code></td>
-                    <td className="py-3 pr-4 text-[#8B949E]">number</td>
-                    <td className="py-3 pr-4"><code className="text-[#A5D6FF]">5</code></td>
-                    <td className="py-3">Max repos to display (1–30, recommended 5–10 for mini)</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </section>
 
-        {/* Features Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span className="text-[#58A6FF]">04.</span> Features
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { icon: "🎨", title: "Language Colors", desc: "Bars auto-colored by primary tech stack using GitHub's linguist colors." },
-              { icon: "🌙", title: "Theme Support", desc: "Dark and light themes that match GitHub's design system." },
-              { icon: "⚡", title: "Edge Cached", desc: "24-hour CDN caching via Vercel Edge Runtime for instant loads." },
-              { icon: "🏆", title: "Quality Ranking", desc: "Best repos ranked by docs, code quality, completeness & maintenance — not just stars." },
-              { icon: "🟢", title: "Active Detection", desc: "Animated indicator for projects active within the last 60 days." },
-              { icon: "📐", title: "Mini Card", desc: "Tiny profile-ready card with bar chart, perfect for GitHub READMEs." },
-            ].map((feature) => (
-              <div key={feature.title} className="bg-[#161B22] border border-[#30363D] rounded-xl p-5">
-                <div className="text-2xl mb-2">{feature.icon}</div>
-                <h3 className="font-semibold text-white mb-1">{feature.title}</h3>
-                <p className="text-sm text-[#8B949E]">{feature.desc}</p>
-              </div>
-            ))}
-          </div>
-        </section>
 
-        {/* Deployment Section */}
-        <section>
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-            <span className="text-[#58A6FF]">05.</span> Self-Deploy
-          </h2>
-          <div className="bg-[#161B22] border border-[#30363D] rounded-xl p-6 space-y-4">
-            <ol className="list-decimal list-inside space-y-3 text-[#E6EDF3]">
-              <li>Fork or clone this repository</li>
-              <li>Install dependencies: <code className="bg-[#0D1117] px-2 py-0.5 rounded text-[#79C0FF] text-sm">npm install</code></li>
-              <li>(Optional) Create a <code className="bg-[#0D1117] px-2 py-0.5 rounded text-[#79C0FF] text-sm">.env.local</code> file with <code className="bg-[#0D1117] px-2 py-0.5 rounded text-[#79C0FF] text-sm">GITHUB_TOKEN=ghp_xxx</code> for higher rate limits</li>
-              <li>Deploy to Vercel: <code className="bg-[#0D1117] px-2 py-0.5 rounded text-[#79C0FF] text-sm">npx vercel --prod</code></li>
-              <li>Add the environment variable <code className="bg-[#0D1117] px-2 py-0.5 rounded text-[#79C0FF] text-sm">GITHUB_TOKEN</code> in Vercel Dashboard → Settings → Environment Variables</li>
-            </ol>
-          </div>
-        </section>
+
+
+
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-[#30363D] py-8 text-center text-[#8B949E] text-sm">
-        <p>Built with Next.js · Deployed on Vercel · Open Source</p>
+      <footer className="border-t border-[#30363D] py-12">
+        <div className="max-w-5xl mx-auto px-6 text-center">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="text-[#8B949E] text-sm">
+              <p>Built with ❤️ using Next.js · Open Source & Free</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <a 
+                href="https://github.com/Pushkar3232/Git-Repo" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-[#8B949E] hover:text-[#58A6FF] transition-colors text-sm"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+                View on GitHub
+              </a>
+              <span className="text-[#30363D]">·</span>
+              <a 
+                href="https://github.com/Pushkar3232/Git-Repo/issues" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#8B949E] hover:text-[#58A6FF] transition-colors text-sm"
+              >
+                Report Issue
+              </a>
+              <span className="text-[#30363D]">·</span>
+              <a 
+                href="https://github.com/Pushkar3232/Git-Repo/fork" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#8B949E] hover:text-[#58A6FF] transition-colors text-sm"
+              >
+                Fork & Contribute
+              </a>
+              <span className="text-[#30363D]">·</span>
+              <a 
+                href="https://pushkarshinde.in" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#8B949E] hover:text-[#58A6FF] transition-colors text-sm flex items-center gap-2"
+              >
+                👨‍💻 Visit Developer
+              </a>
+            </div>
+          </div>
+        </div>
       </footer>
     </div>
   );
